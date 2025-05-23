@@ -3,27 +3,6 @@ import streamlit as st
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
 
-print("📦 Starting Streamlit UI...")
-
-
-import os
-from streamlit.web import bootstrap
-
-# Dynamically get the correct port
-port = int(os.environ.get("PORT", 8501))
-
-# Start the Streamlit app from code
-bootstrap.run(
-    "streamlit_ui.py",
-    "",
-    [],
-    {
-        "server.port": port,
-        "server.enableCORS": False,
-        "server.enableXsrfProtection": False
-    }
-)
-
 st.title("🚀 Streamlit + Twilio is Running!")
 
 TWILIO_SID = os.getenv("TWILIO_SID")
