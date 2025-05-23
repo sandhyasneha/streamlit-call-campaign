@@ -15,7 +15,7 @@ COPY . .
 EXPOSE 8501
 
 # Run your app via Python (not Streamlit CLI) to avoid Railway port issues
-CMD ["python", "main.py"]
+CMD ["python", "launch"]
 
 
 
