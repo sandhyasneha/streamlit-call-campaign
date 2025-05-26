@@ -28,7 +28,7 @@ h1, h2, h3 {
 """, unsafe_allow_html=True)
 
 # --- Header ---
-st.title("📞 TruckTaxOnline.com - Campaign DashboardCampaign Dashboard")
+st.title("📞 AI Campaign DashboardCampaign Dashboard")
 st.caption("Powering automated voice outreach with Twilio + Streamlit")
 
 # --- Upload section ---
@@ -45,7 +45,8 @@ TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
 client = Client(TWILIO_SID, TWILIO_AUTH_TOKEN)
 
 # --- Static hosted audio ---
-audio_url = "https://raw.githubusercontent.com/sandhyasneha/streamlit-call-campaign/main/HumeAI_voice-preview_prefile.wav"
+audio_url = "https://raw.githubusercontent.com/sandhyasneha/streamlit-call-campaign/main/HumeAI_voice-preview_tax2290.wav"
+
 
 # --- Load numbers ---
 @st.cache_data
