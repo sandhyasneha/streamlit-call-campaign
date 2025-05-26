@@ -1,1 +1,2 @@
-web: streamlit run call_campaign_ui.py --server.port=$PORT --server.enableCORS false
+
+streamlit run call_campaign_ui.py --server.port=$PORT
