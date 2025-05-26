@@ -9,7 +9,8 @@ COPY . .
 
 EXPOSE 8501
 
-CMD ["python", "launch.py"]
+CMD ["streamlit", "run", "call_campaign_ui.py", "--server.port=8501", "--server.enableCORS=false"]
+
 
 
 
