@@ -1,16 +1,17 @@
-
 import os
 import streamlit as st
 import pandas as pd
 from twilio.rest import Client
+from tempfile import NamedTemporaryFile
 
-# --- Branding + Page Config ---
+# --- Branding ---
 st.set_page_config(
     page_title="TruckTaxOnline 2290 Call Campaign",
     page_icon="📞",
     layout="centered"
 )
 
+# --- Custom Styles ---
 st.markdown("""
 <style>
 body {background-color: #f6f9fc;}
@@ -38,23 +39,23 @@ st.image("https://www.trucktaxonline.com/assets/logo.png", width=200)
 st.title("📢 TruckTaxOnline — 2290 Call Campaign")
 st.markdown("Reach truckers faster with automated voice calls for 2290 tax reminders.")
 
-# --- Upload section ---
+# --- Upload Section ---
 st.subheader("📁 Upload Customer List")
 uploaded_excel = st.file_uploader("Choose a CSV or Excel file with a 'Phone' column:", type=["csv", "xlsx"])
 
-# --- Start button ---
+st.subheader("🎵 Upload Audio File")
+uploaded_audio = st.file_uploader("Choose an audio file (MP3 or WAV)", type=["mp3", "wav"])
+
+# --- Launch Button ---
 deploy_btn = st.button("🚀 Launch Voice Campaign")
 
-# --- Twilio credentials ---
+# --- Twilio Setup ---
 TWILIO_SID = os.getenv("TWILIO_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
 client = Client(TWILIO_SID, TWILIO_AUTH_TOKEN)
 
-# --- Hosted audio ---
-audio_url = "https://raw.githubusercontent.com/sandhyasneha/streamlit-call-campaign/main/HumeAI_voice-preview_tax2290.wav"
-
-# --- Load numbers ---
+# --- Helper to Load Phone Numbers ---
 @st.cache_data
 def load_phone_numbers(file):
     if file.name.endswith(".csv"):
@@ -63,12 +64,18 @@ def load_phone_numbers(file):
         df = pd.read_excel(file)
     return df['Phone'].dropna().astype(str).tolist()
 
-# --- Main Logic ---
+# --- Campaign Logic ---
 if deploy_btn:
-    if not uploaded_excel:
-        st.warning("Please upload your phone list first.")
+    if not uploaded_excel or not uploaded_audio:
+        st.warning("Please upload both a phone list and an audio file.")
     else:
         phone_numbers = load_phone_numbers(uploaded_excel)
+
+        # Save the uploaded audio file temporarily
+        with NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_audio.name)[-1]) as temp_audio:
+            temp_audio.write(uploaded_audio.read())
+            temp_audio_path = temp_audio.name
+
         st.success(f"📞 Preparing to call {len(phone_numbers)} customers...")
 
         for number in phone_numbers:
@@ -76,7 +83,7 @@ if deploy_btn:
                 call = client.calls.create(
                     to=number,
                     from_=TWILIO_PHONE_NUMBER,
-                    twiml=f'<Response><Play>{audio_url}</Play></Response>'
+                    twiml=f'<Response><Play>{temp_audio_path}</Play></Response>'
                 )
                 st.info(f"✅ Calling {number}... SID: {call.sid}")
             except Exception as e:
