@@ -84,7 +84,8 @@ if deploy_btn:
         st.success(f"📞 Preparing to call {len(phone_numbers)} customers...")
 
         with st.spinner("Uploading audio to cloud..."):
-            res = cloudinary_upload(uploaded_audio, resource_type="video")
+            res = cloudinary_upload(uploaded_audio, resource_type="raw")
+
             audio_url = res['secure_url']
 
         st.markdown(f"[🔗 Test Audio Link]({audio_url})", unsafe_allow_html=True)
