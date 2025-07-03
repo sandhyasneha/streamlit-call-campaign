@@ -5,6 +5,7 @@ from twilio.rest import Client
 from cloudinary.uploader import upload as cloudinary_upload
 from cloudinary.utils import cloudinary_url
 import cloudinary
+from datetime import datetime
 
 # --- Page Config ---
 st.set_page_config(
@@ -47,8 +48,6 @@ uploaded_excel = st.file_uploader("Choose a CSV or Excel file with a 'Phone' col
 
 st.subheader("🔊 Upload Audio File")
 uploaded_audio = st.file_uploader("Upload MP3 or WAV audio to play in calls:", type=["mp3", "wav"])
-if uploaded_audio:
-    st.audio(uploaded_audio, format="audio/mp3" if uploaded_audio.name.endswith(".mp3") else "audio/wav")
 
 # --- Launch Campaign Button ---
 deploy_btn = st.button("🚀 Launch Voice Campaign")
@@ -75,6 +74,9 @@ def load_phone_numbers(file):
         df = pd.read_excel(file)
     return df['Phone'].dropna().astype(str).tolist()
 
+# --- Analytics DataFrame ---
+call_logs = []
+
 # --- Main Logic ---
 if deploy_btn:
     if not uploaded_excel or not uploaded_audio:
@@ -83,25 +85,30 @@ if deploy_btn:
         phone_numbers = load_phone_numbers(uploaded_excel)
         st.success(f"📞 Preparing to call {len(phone_numbers)} customers...")
 
+        # Upload audio to Cloudinary
         with st.spinner("Uploading audio to cloud..."):
-            res = cloudinary_upload(uploaded_audio, resource_type="raw")
-
+            res = cloudinary_upload(uploaded_audio, resource_type="video")
             audio_url = res['secure_url']
 
-        st.markdown(f"[🔗 Test Audio Link]({audio_url})", unsafe_allow_html=True)
-
         for number in phone_numbers:
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             try:
                 call = client.calls.create(
                     to=number,
                     from_=TWILIO_PHONE_NUMBER,
                     twiml=f'<Response><Play>{audio_url}</Play></Response>'
                 )
+                call_logs.append({"Phone": number, "Status": "Success", "SID": call.sid, "Time": timestamp})
                 st.info(f"✅ Calling {number}... SID: {call.sid}")
             except Exception as e:
+                call_logs.append({"Phone": number, "Status": f"Failed: {str(e)}", "SID": "-", "Time": timestamp})
                 st.error(f"❌ Failed to call {number}: {e}")
 
         st.success("🎉 Campaign launched successfully!")
+
+        # --- Display Analytics ---
+        st.subheader("📊 Campaign Analytics")
+        st.dataframe(pd.DataFrame(call_logs))
 
 # --- Footer ---
 st.markdown("---")
