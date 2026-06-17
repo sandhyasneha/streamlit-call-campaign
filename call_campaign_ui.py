@@ -1,11 +1,20 @@
-import os
-import streamlit as st
-import pandas as pd
-from twilio.rest import Client
+import plivo
+import time
+PLIVO_AUTH_ID = os.getenv("PLIVO_AUTH_ID")
+PLIVO_AUTH_TOKEN = os.getenv("PLIVO_AUTH_TOKEN")
+PLIVO_FROM_NUMBER = os.getenv("PLIVO_FROM_NUMBER")
+PLIVO_XML_URL = os.getenv("PLIVO_XML_URL")
+
+client = plivo.RestClient(
+    auth_id=PLIVO_AUTH_ID,
+    auth_token=PLIVO_AUTH_TOKEN
+)
+
+
 from cloudinary.uploader import upload as cloudinary_upload
 from cloudinary.utils import cloudinary_url
 import cloudinary
-from datetime import datetime
+
 
 # --- Page Config ---
 st.set_page_config(
@@ -52,11 +61,10 @@ uploaded_audio = st.file_uploader("Upload MP3 or WAV audio to play in calls:", t
 # --- Launch Campaign Button ---
 deploy_btn = st.button("🚀 Launch Voice Campaign")
 
-# --- Twilio Credentials ---
-TWILIO_SID = os.getenv("TWILIO_SID")
-TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
-TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
-client = Client(TWILIO_SID, TWILIO_AUTH_TOKEN)
+# --- PLIVO Credentials ---
+PLIVO_AUTH_ID = os.getenv("PLIVO_AUTH_ID")
+PLIVO_AUTH_TOKEN = os.getenv("PLIVO_AUTH_TOKEN")
+PLIVO_PHONE_NUMBER = os.getenv("PLIVO_PHONE_NUMBER")
 
 # --- Cloudinary Config ---
 cloudinary.config(
@@ -93,11 +101,17 @@ if deploy_btn:
         for number in phone_numbers:
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             try:
-                call = client.calls.create(
-                    to=number,
-                    from_=TWILIO_PHONE_NUMBER,
-                    twiml=f'<Response><Play>{audio_url}</Play></Response>'
-                )
+                
+response = client.calls.create(
+    from_=PLIVO_FROM_NUMBER,
+    to_=number,
+    answer_url=f"{PLIVO_XML_URL}?audio={audio_url}",
+    answer_method="GET"
+)
+
+time.sleep(1.1)
+
+
                 call_logs.append({"Phone": number, "Status": "Success", "SID": call.sid, "Time": timestamp})
                 st.info(f"✅ Calling {number}... SID: {call.sid}")
             except Exception as e:
