@@ -1,5 +1,7 @@
 streamlit
 pandas
-openpyxl
 plivo
 cloudinary
+openpyxl
+gunicorn
+flask
